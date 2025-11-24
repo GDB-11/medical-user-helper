@@ -1,6 +1,6 @@
 using Photino.NET;
 
-namespace MedicalUsersHelper.MessageHandlers.Handlers;
+namespace MedicalUsersHelper.MessageHandlers;
 
 /// <summary>
 /// Base class for message handlers with common functionality
@@ -13,11 +13,8 @@ public abstract class BaseMessageHandler : IMessageHandler
     /// <summary>
     /// Extract JSON from payload that may be in "request:id:json" format
     /// </summary>
-    protected string ExtractJsonFromPayload(string payload)
-    {
-        // Payload format: "request:id:jsonData" or just "jsonData"
-        // We need to extract the JSON part
-        
+    protected static string ExtractJsonFromPayload(string payload)
+    {        
         if (string.IsNullOrWhiteSpace(payload))
         {
             return payload;
