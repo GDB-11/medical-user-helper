@@ -1,3 +1,5 @@
+using System.Text.Json;
+using MedicalUsersHelper.PhotinoHelpers;
 using Photino.NET;
 
 namespace MedicalUsersHelper.MessageHandlers;
@@ -45,5 +47,53 @@ public abstract class BaseMessageHandler : IMessageHandler
 
         // Return everything after the second colon
         return payload[(secondColon + 1)..];
+    }
+
+    /// <summary>
+    /// Deserialize JSON payload and execute an action with error handling
+    /// </summary>
+    protected void HandleRequest<TRequest>(PhotinoWindow window, string jsonPayload, Action<PhotinoWindow, TRequest> handler)
+        where TRequest : class
+    {
+        try
+        {
+            var data = JsonSerializer.Deserialize<TRequest>(jsonPayload);
+            
+            if (data is null)
+            {
+                window.SendError($"{Command}:response:0", "Invalid request data");
+                return;
+            }
+
+            handler(window, data);
+        }
+        catch (Exception ex)
+        {
+            window.SendError($"{Command}:response:0", $"Error processing request: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Send a success response with a result value
+    /// </summary>
+    protected void SendSuccessResponse<T>(PhotinoWindow window, int requestId, string propertyName, T value)
+    {
+        window.SendJsonMessage($"{Command}:response:{requestId}", new Dictionary<string, object>
+        {
+            ["success"] = true,
+            [propertyName] = value!
+        });
+    }
+
+    /// <summary>
+    /// Send an error response
+    /// </summary>
+    protected void SendErrorResponse(PhotinoWindow window, int requestId, string errorMessage)
+    {
+        window.SendJsonMessage($"{Command}:response:{requestId}", new
+        {
+            success = false,
+            error = errorMessage
+        });
     }
 }
