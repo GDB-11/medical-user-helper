@@ -26,7 +26,17 @@ class Program
     [STAThread]
     static void Main(string[] args)
     {
-        var databasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "medical-helper.db");
+        // Get the appropriate data directory for the platform
+        string appDataDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MedicalUsersHelper"
+        );
+
+        // Ensure the directory exists
+        Directory.CreateDirectory(appDataDir);
+
+        // Create database path
+        var databasePath = Path.Combine(appDataDir, "medical-helper.db");
         var databaseInitializer = new DatabaseInitializer(databasePath);
         databaseInitializer.Initialize();
 
