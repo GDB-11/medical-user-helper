@@ -1,12 +1,10 @@
-using System.Text.Json;
 using Application.Core.DTOs.DrugEnforcementAdministration.UI;
 using Application.Core.Interfaces.DrugEnforcementAdministration;
-using MedicalUsersHelper.PhotinoHelpers;
 using Photino.NET;
 
 namespace MedicalUsersHelper.MessageHandlers.Handlers;
 
-public sealed class DeaHandler: BaseMessageHandler
+public sealed class DeaHandler : BaseMessageHandler
 {
     private readonly IDrugEnforcementAdministration _deaService;
     
@@ -21,74 +19,54 @@ public sealed class DeaHandler: BaseMessageHandler
     {
         try
         {
-            // Extract JSON from "request:id:json" format
             var jsonPayload = ExtractJsonFromPayload(payload);
-            
-            var data = JsonSerializer.Deserialize<DeaRequest>(jsonPayload);
-            
-            if (data is null)
-            {
-                window.SendError("dea:response:" + data?.RequestId, "Invalid request data");
-                return;
-            }
-
-            // Handle both regular DEA and NDEA (Narcotic)
-            if (data.IsNarcotic)
-            {
-                HandleNdeaRequest(window, data);
-            }
-            else
-            {
-                HandleDeaRequest(window, data);
-            }
+            HandleRequest<DeaRequest>(window, jsonPayload, ProcessDeaRequest);
         }
         catch (Exception ex)
         {
-            window.SendError("dea:response:0", $"Error processing request: {ex.Message}");
+            SendErrorResponse(window, 0, $"Error processing request: {ex.Message}");
         }
     }
 
-    private async void HandleDeaRequest(PhotinoWindow window, DeaRequest data)
+    private async void ProcessDeaRequest(PhotinoWindow window, DeaRequest data)
+    {
+        if (data.IsNarcotic)
+        {
+            await HandleNdeaRequestAsync(window, data);
+        }
+        else
+        {
+            await HandleDeaRequestAsync(window, data);
+        }
+    }
+
+    private async Task HandleDeaRequestAsync(PhotinoWindow window, DeaRequest data)
     {
         var result = await _deaService.CreateDrugEnforcementAdministrationNumber(data.LastName);
 
         if (result.IsSuccess)
         {
-            window.SendJsonMessage($"dea:response:{data.RequestId}", new
-            {
-                success = true,
-                deaNumber = result.Value.DrugEnforcementAdministrationNumber
-            });
+            SendSuccessResponse(window, data.RequestId, "deaNumber", 
+                result.Value.DrugEnforcementAdministrationNumber);
         }
         else
         {
-            window.SendJsonMessage($"dea:response:{data.RequestId}", new
-            {
-                success = false,
-                error = result.Error.Message
-            });
+            SendErrorResponse(window, data.RequestId, result.Error.Message);
         }
     }
 
-    private async void HandleNdeaRequest(PhotinoWindow window, DeaRequest data)
+    private async Task HandleNdeaRequestAsync(PhotinoWindow window, DeaRequest data)
     {
         var result = await _deaService.CreateNarcoticDrugEnforcementAddictionNumber(data.LastName);
 
         if (result.IsSuccess)
         {
-            window.SendJsonMessage($"dea:response:{data.RequestId}", new
-            {
-                success = true,
-                deaNumber = result.Value.NarcoticDrugEnforcementAddictionNumber
-            });
+            SendSuccessResponse(window, data.RequestId, "deaNumber", 
+                result.Value.NarcoticDrugEnforcementAddictionNumber);
         }
         else
         {
-            window.SendJsonMessage($"dea:response:{data.RequestId}", new
-            {
-                success = false,
-                error = result.Error.Message
-            });
+            SendErrorResponse(window, data.RequestId, result.Error.Message);
         }
     }
 }
