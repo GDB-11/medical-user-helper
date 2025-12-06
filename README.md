@@ -6,7 +6,7 @@
 
 [![Built with BindSharp](https://img.shields.io/badge/Built%20with-BindSharp-blue?style=for-the-badge)](https://github.com/BindSharp/BindSharp)
 [![Photino](https://img.shields.io/badge/Photino-Cross--Platform-green?style=for-the-badge)](https://www.tryphotino.io/)
-[![.NET](https://img.shields.io/badge/.NET-8.0-purple?style=for-the-badge)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple?style=for-the-badge)](https://dotnet.microsoft.com/)
 
 ---
 
